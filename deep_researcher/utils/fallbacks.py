@@ -120,15 +120,15 @@ def get_supervisor_llm() -> ChatOllama:
 
 
 def get_worker_llm() -> ChatOllama:
-    """Retrieve worker LLM instance (qwen3:8b) for tool-calling execution."""
+    """Retrieve worker LLM instance (qwen3.5:9b) for tool-calling execution."""
     return build_chat_model(WORKER_CONFIG)
 
 
 def get_worker_llm_with_fallbacks() -> RunnableWithFallbacks:
     """Construct worker model with multi-tier fallback configuration.
     
-    Primary: qwen3:8b (context 16k, temp 0.0)
-    Tier 1 Fallback: qwen3:8b (expanded context 32k to handle large document scrapes)
+    Primary: qwen3.5:9b (context 16k, temp 0.0)
+    Tier 1 Fallback: qwen3.5:9b (expanded context 32k to handle large document scrapes)
     """
     primary = get_worker_llm()
 

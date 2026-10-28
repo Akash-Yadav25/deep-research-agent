@@ -33,7 +33,7 @@ SUPERVISOR_CONFIG = ModelConfig(
 )
 
 WORKER_CONFIG = ModelConfig(
-    model=os.getenv("WORKER_MODEL", "qwen3:8b"),
+    model=os.getenv("WORKER_MODEL", "qwen3.5:9b"),
     temperature=float(os.getenv("WORKER_TEMPERATURE", "0.0")),     # Strict 0.0 for deterministic tool calls
     num_ctx=int(os.getenv("WORKER_NUM_CTX", "16384")),             # Fits search results + conversation
     num_predict=2048,

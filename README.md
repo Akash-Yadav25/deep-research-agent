@@ -7,7 +7,7 @@ A production-grade, hierarchical multi-agent research system built with **LangGr
 ## 🏛️ Core Architectural Pillars
 
 1. **Hierarchical Delegation**: A central supervisor (`deepseek-r1:14b`) strategically plans, evaluates, and delegates targeted sub-inquiries to domain execution agents rather than executing monolithic web queries.
-2. **Phase-Ordered Sub-Agent Execution**: Domain workers (`qwen3:8b`) strictly enforce **Search/Read first**, and **Batch Save second** to maximize key-value cache utilization, prevent context fragmentation, and eliminate LLM thrashing.
+2. **Phase-Ordered Sub-Agent Execution**: Domain workers (`qwen3.5:9b`) strictly enforce **Search/Read first**, and **Batch Save second** to maximize key-value cache utilization, prevent context fragmentation, and eliminate LLM thrashing.
 3. **Unified Citations**: Research findings use local source tags (`[web-1]`, `[arxiv-2]`) that are dynamically remapped into a globally unified sequential namespace (`[1]`, `[2]`, `[3]`) and published alongside an academic reference bibliography and structured JSON source catalog.
 4. **Resilient Fallbacks**: Multi-tier model fallback chains, tool-level retry policies, and an automated circuit breaker prevent execution stalls.
 
@@ -18,7 +18,20 @@ A production-grade, hierarchical multi-agent research system built with **LangGr
 | Role | Model | Deployment | Invocation Pattern | Rationale |
 |:---|:---|:---|:---|:---|
 | **Supervisor & Planner** | `deepseek-r1:14b` | Local Ollama | `.with_structured_output(..., method="json_schema")` | Deep reasoning and planning capabilities. Operating via grammar-constrained structured decoding avoids Ollama tool-calling limitations. Reasoning traces `<think>` are cleanly captured. |
-| **Domain Workers** | `qwen3:8b` | Local Ollama | Native Tool Calling (`.bind_tools()` / `create_react_agent`) | High token throughput with native support for tool/function calling and search execution. |
+| **Domain Workers** | `qwen3.5:9b` | Local Ollama | Native Tool Calling (`.bind_tools()` / `create_react_agent`) | High token throughput with native support for tool/function calling and search execution. |
+
+> [!IMPORTANT]
+> **Hardware & Memory Optimization for Laptops and Low-End Devices**
+>
+> Swapping between different large models (e.g., alternating between a 14B supervisor and a 9B worker) requires Ollama to continually unload and reload model weights into VRAM/system RAM, which takes noticeable time. Furthermore, retaining several large models in memory can saturate available RAM, leading to OS memory swapping and making the laptop sluggish.
+>
+> **Recommendation for Lower-End / Memory-Constrained Devices**:
+> Configure both roles to use the **same model** (such as `qwen3.5:9b`):
+> ```env
+> SUPERVISOR_MODEL=qwen3.5:9b
+> WORKER_MODEL=qwen3.5:9b
+> ```
+> This keeps a single model warm in memory, eliminates model swapping latency, and ensures responsive, smooth local execution.
 
 ---
 
@@ -61,8 +74,8 @@ A production-grade, hierarchical multi-agent research system built with **LangGr
 - Python >= 3.11
 - [Ollama](https://ollama.com/) running locally:
   ```bash
-  ollama pull deepseek-r1:14b
-  ollama pull qwen3:8b
+  ollama pull deepseek-r1:14b   # High-capacity reasoning planner
+  ollama pull qwen3.5:9b        # Worker & tool-calling model (or unified model)
   ```
 - (Optional) Tavily API key from [tavily.com](https://tavily.com) (1,000 free requests/month).
 
@@ -88,8 +101,15 @@ Edit `.env`:
 ```env
 TAVILY_API_KEY=tvly-your-api-key-here
 OLLAMA_BASE_URL=http://localhost:11434
+
+# Standard Dual-Model Setup (Requires ~16GB+ VRAM/RAM)
 SUPERVISOR_MODEL=deepseek-r1:14b
-WORKER_MODEL=qwen3:8b
+WORKER_MODEL=qwen3.5:9b
+
+# Low-End Devices / Single-Model Recommendation (Zero model-swap overhead):
+# SUPERVISOR_MODEL=qwen3.5:9b
+# WORKER_MODEL=qwen3.5:9b
+
 MAX_RESEARCH_ITERATIONS=5
 ENABLE_SUBTOPICS=false
 HEADLESS_MODE=true

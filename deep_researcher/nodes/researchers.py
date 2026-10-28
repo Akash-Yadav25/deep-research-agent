@@ -134,7 +134,7 @@ def web_researcher(state: ResearchState) -> dict:
     logger.info("[web_researcher] Starting Web research phase...")
 
     # Phase 1: Search & Read
-    # Build tool-enabled ReAct agent with qwen3:8b
+    # Build tool-enabled ReAct agent with qwen3.5:9b
     worker_llm = get_worker_llm()
     agent = create_react_agent(
         model=worker_llm,
