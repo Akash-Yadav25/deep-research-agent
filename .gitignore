@@ -32,7 +32,6 @@ env/
 .env
 
 # Output & cache
-output/
 .pytest_cache/
 .coverage
 htmlcov/
