@@ -14,6 +14,7 @@ from rich.table import Table
 from deep_researcher.config.settings import (
     ENABLE_SUBTOPICS,
     HEADLESS_MODE,
+    LLM_PROVIDER,
     MAX_RESEARCH_ITERATIONS,
     SUPERVISOR_CONFIG,
     WORKER_CONFIG,
@@ -30,6 +31,7 @@ def print_system_banner(topic: str, max_iterations: int, enable_subtopics: bool)
     grid.add_column(style="bold cyan")
     grid.add_column()
 
+    grid.add_row("Provider:", f"[bold green]{LLM_PROVIDER.upper()}[/bold green]")
     grid.add_row("Supervisor Model:", f"{SUPERVISOR_CONFIG.model} (structured output & reasoning)")
     grid.add_row("Worker Model:", f"{WORKER_CONFIG.model} (tool calling)")
     grid.add_row("Max Iterations:", str(max_iterations))
@@ -40,7 +42,7 @@ def print_system_banner(topic: str, max_iterations: int, enable_subtopics: bool)
         Panel(
             grid,
             title="[bold yellow]🔬 DEEP RESEARCHER — MULTI-AGENT ENGINE[/bold yellow]",
-            subtitle="[dim]Hierarchical Delegation • LangGraph • Ollama • Tavily • arXiv[/dim]",
+            subtitle=f"[dim]Hierarchical Delegation • LangGraph • {LLM_PROVIDER.title()} • Tavily • arXiv[/dim]",
             border_style="cyan",
         )
     )

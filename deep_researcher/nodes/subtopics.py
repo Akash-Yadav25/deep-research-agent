@@ -32,7 +32,7 @@ def subtopic_evaluation(state: ResearchState) -> dict:
         return {"subtopics": []}
 
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(SubtopicEvaluation, method="json_schema")
+    structured_llm = llm.with_structured_output(SubtopicEvaluation)
 
     logger.info("[subtopic_evaluation] Evaluating candidate spin-off subtopics...")
 

@@ -5,6 +5,7 @@ from deep_researcher.config.settings import (
     ARXIV_MAX_RESULTS,
     ENABLE_SUBTOPICS,
     HEADLESS_MODE,
+    LLM_PROVIDER,
     MAX_RESEARCH_ITERATIONS,
     SUPERVISOR_CONFIG,
     TAVILY_API_KEY,
@@ -13,6 +14,7 @@ from deep_researcher.config.settings import (
     TAVILY_SEARCH_DEPTH_EXPLORATORY,
     WORKER_CONFIG,
     ModelConfig,
+    RoleModelConfig,
 )
 
 __all__ = [
@@ -20,6 +22,7 @@ __all__ = [
     "ARXIV_MAX_RESULTS",
     "ENABLE_SUBTOPICS",
     "HEADLESS_MODE",
+    "LLM_PROVIDER",
     "MAX_RESEARCH_ITERATIONS",
     "SUPERVISOR_CONFIG",
     "TAVILY_API_KEY",
@@ -28,4 +31,5 @@ __all__ = [
     "TAVILY_SEARCH_DEPTH_EXPLORATORY",
     "WORKER_CONFIG",
     "ModelConfig",
+    "RoleModelConfig",
 ]

@@ -51,7 +51,7 @@ def evaluate_progress(
         return Command(goto="supervisor_node")
 
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(EvaluationResult, method="json_schema")
+    structured_llm = llm.with_structured_output(EvaluationResult)
 
     brief = state.get("research_brief")
     brief_text = brief.model_dump_json(indent=2) if brief else state.get("topic", "")

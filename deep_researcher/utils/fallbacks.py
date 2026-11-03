@@ -6,14 +6,14 @@ import logging
 import time
 from typing import Any, Callable, TypeVar
 
-from langchain_core.runnables import RunnableWithFallbacks
-from langchain_ollama import ChatOllama
+from langchain_core.language_models.chat_models import BaseChatModel
 
 from deep_researcher.config.settings import (
     SUPERVISOR_CONFIG,
     WORKER_CONFIG,
-    ModelConfig,
+    RoleModelConfig,
 )
+from deep_researcher.providers.factory import ModelFactory
 
 logger = logging.getLogger(__name__)
 
@@ -94,50 +94,21 @@ web_circuit_breaker = CircuitBreaker("tavily_web_search", failure_threshold=4, r
 arxiv_circuit_breaker = CircuitBreaker("arxiv_paper_search", failure_threshold=3, recovery_timeout_seconds=30.0)
 
 
-def build_chat_model(config: ModelConfig) -> ChatOllama:
-    """Instantiate a ChatOllama model client with optimized parameters."""
-    kwargs: dict[str, Any] = {
-        "model": config.model,
-        "base_url": config.base_url,
-        "temperature": config.temperature,
-        "num_ctx": config.num_ctx,
-        "keep_alive": config.keep_alive,
-    }
-    if config.num_predict > 0:
-        kwargs["num_predict"] = config.num_predict
-    if config.reasoning:
-        kwargs["reasoning"] = True
-
-    return ChatOllama(**kwargs)
+def build_chat_model(config: RoleModelConfig) -> BaseChatModel:
+    """Instantiate a chat model client via the provider factory."""
+    return ModelFactory.create_model(config)
 
 
-def get_supervisor_llm() -> ChatOllama:
-    """Retrieve supervisor LLM instance (deepseek-r1:14b).
-    
-    Operates strictly via structured outputs for planning and writing.
-    """
+def get_supervisor_llm() -> BaseChatModel:
+    """Retrieve supervisor LLM instance for reasoning and structured outputs."""
     return build_chat_model(SUPERVISOR_CONFIG)
 
 
-def get_worker_llm() -> ChatOllama:
-    """Retrieve worker LLM instance (qwen3.5:9b) for tool-calling execution."""
+def get_worker_llm() -> BaseChatModel:
+    """Retrieve worker LLM instance for tool-calling execution."""
     return build_chat_model(WORKER_CONFIG)
 
 
-def get_worker_llm_with_fallbacks() -> RunnableWithFallbacks:
-    """Construct worker model with multi-tier fallback configuration.
-    
-    Primary: qwen3.5:9b (context 16k, temp 0.0)
-    Tier 1 Fallback: qwen3.5:9b (expanded context 32k to handle large document scrapes)
-    """
-    primary = get_worker_llm()
-
-    fallback_tier1 = ChatOllama(
-        model=WORKER_CONFIG.model,
-        base_url=WORKER_CONFIG.base_url,
-        temperature=0.0,
-        num_ctx=32768,  # Expanded context for larger payloads
-        keep_alive=WORKER_CONFIG.keep_alive,
-    )
-
-    return primary.with_fallbacks([fallback_tier1])
+def get_worker_llm_with_fallbacks() -> BaseChatModel:
+    """Retrieve worker model directly. Multi-tier fallbacks deferred per design."""
+    return get_worker_llm()

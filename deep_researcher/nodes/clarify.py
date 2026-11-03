@@ -24,7 +24,7 @@ You must respond with valid structured output."""
 def clarify_with_user(state: ResearchState) -> dict:
     """Analyze the prompt, determine if clarification is required, and formulate assumptions."""
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(ClarificationResult, method="json_schema")
+    structured_llm = llm.with_structured_output(ClarificationResult)
 
     topic = state.get("topic", "").strip()
     logger.info(f"[clarify_with_user] Analyzing topic: '{topic}' (headless={HEADLESS_MODE})")

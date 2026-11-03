@@ -50,7 +50,7 @@ def supervisor_node(
         )
 
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(SupervisorDecision, method="json_schema")
+    structured_llm = llm.with_structured_output(SupervisorDecision)
 
     # Context distillation to keep prompt clean
     brief = state.get("research_brief")
