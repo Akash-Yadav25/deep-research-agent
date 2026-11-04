@@ -29,7 +29,7 @@ You must respond with valid structured output adhering to the schema."""
 def write_research_brief(state: ResearchState) -> dict:
     """Analyze the refined topic and construct a comprehensive ResearchBrief."""
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(ResearchBrief, method="json_schema")
+    structured_llm = llm.with_structured_output(ResearchBrief)
 
     topic = state.get("topic", "")
     logger.info(f"[write_research_brief] Formulating research brief for: '{topic}'")

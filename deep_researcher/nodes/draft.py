@@ -23,7 +23,7 @@ You must respond with valid structured output conforming to the DraftReport sche
 def write_draft_report(state: ResearchState) -> dict:
     """Generate a skeleton draft report with section hypotheses and open investigation questions."""
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(DraftReport, method="json_schema")
+    structured_llm = llm.with_structured_output(DraftReport)
 
     brief = state.get("research_brief")
     if brief:

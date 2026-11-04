@@ -32,8 +32,6 @@ def test_main_graph_compilation():
         "write_draft_report",
         "research_loop",
         "final_report_node",
-        "subtopic_evaluation",
-        "subtopic_research_worker",
     ]
     for node in expected_nodes:
         assert node in graph.nodes
@@ -66,9 +64,6 @@ def test_clarify_node_headless():
             "current_phase": "clarify",
             "final_report": "",
             "sources_json": "",
-            "enable_subtopics": False,
-            "subtopics": [],
-            "subtopic_reports": [],
         }
         output = clarify_with_user(initial_state)
         assert output["topic"] == "Deep Learning Optimization"
@@ -109,9 +104,6 @@ def test_final_report_node_synthesis_and_citation():
         "current_phase": "final",
         "final_report": "",
         "sources_json": "",
-        "enable_subtopics": False,
-        "subtopics": [],
-        "subtopic_reports": [],
     }
 
     with patch("deep_researcher.nodes.final_report.get_supervisor_llm", return_value=mock_llm):

@@ -130,15 +130,3 @@ class EvaluationResult(BaseModel):
         default=None,
         description="Highest priority gap to investigate if evidence is insufficient.",
     )
-
-
-class SubtopicEvaluation(BaseModel):
-    """Assessment of follow-up deep-dive opportunities."""
-
-    has_subtopics: bool = Field(
-        description="Whether promising unexplored spin-off subtopics were discovered."
-    )
-    subtopics: list[str] = Field(
-        default_factory=list,
-        description="Candidate spin-off research topics deserving dedicated investigation.",
-    )

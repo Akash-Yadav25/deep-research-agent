@@ -7,7 +7,6 @@ from deep_researcher.models.schemas import (
     EvaluationResult,
     ResearchBrief,
     ResearchQuestion,
-    SubtopicEvaluation,
     SupervisorDecision,
 )
 from deep_researcher.models.state import (
@@ -28,7 +27,6 @@ __all__ = [
     "ResearchQuestion",
     "ResearchState",
     "Source",
-    "SubtopicEvaluation",
     "SupervisorDecision",
     "WorkerState",
     "merge_sources",
