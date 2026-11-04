@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from deep_researcher.models.schemas import ResearchBrief, ResearchQuestion
 from deep_researcher.models.state import ResearchState
 from deep_researcher.utils.fallbacks import get_supervisor_llm
+from deep_researcher.utils.structured import invoke_structured
 
 logger = logging.getLogger(__name__)
 
@@ -29,16 +30,19 @@ You must respond with valid structured output adhering to the schema."""
 def write_research_brief(state: ResearchState) -> dict:
     """Analyze the refined topic and construct a comprehensive ResearchBrief."""
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(ResearchBrief)
 
     topic = state.get("topic", "")
     logger.info(f"[write_research_brief] Formulating research brief for: '{topic}'")
 
     try:
-        brief: ResearchBrief = structured_llm.invoke([
-            SystemMessage(content=BRIEF_SYSTEM_PROMPT),
-            HumanMessage(content=f"Research topic: \"{topic}\""),
-        ])
+        brief: ResearchBrief = invoke_structured(
+            llm=llm,
+            schema=ResearchBrief,
+            messages=[
+                SystemMessage(content=BRIEF_SYSTEM_PROMPT),
+                HumanMessage(content=f"Research topic: \"{topic}\""),
+            ],
+        )
     except Exception as exc:
         logger.warning(f"Structured output failed for research brief ({exc}), creating baseline brief.")
         brief = ResearchBrief(

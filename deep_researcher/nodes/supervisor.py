@@ -9,6 +9,7 @@ from langgraph.types import Command
 from deep_researcher.models.schemas import SupervisorDecision
 from deep_researcher.models.state import ResearchState
 from deep_researcher.utils.fallbacks import get_supervisor_llm
+from deep_researcher.utils.structured import invoke_structured
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,6 @@ def supervisor_node(
         )
 
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(SupervisorDecision)
 
     # Context distillation to keep prompt clean
     brief = state.get("research_brief")
@@ -76,10 +76,14 @@ def supervisor_node(
     )
 
     try:
-        decision: SupervisorDecision = structured_llm.invoke([
-            SystemMessage(content=SUPERVISOR_SYSTEM_PROMPT),
-            HumanMessage(content=user_msg_content),
-        ])
+        decision: SupervisorDecision = invoke_structured(
+            llm=llm,
+            schema=SupervisorDecision,
+            messages=[
+                SystemMessage(content=SUPERVISOR_SYSTEM_PROMPT),
+                HumanMessage(content=user_msg_content),
+            ],
+        )
     except Exception as exc:
         logger.warning(f"Supervisor structured output failed ({exc}), falling back to alternating heuristic.")
         # Heuristic fallback: alternate web vs paper
