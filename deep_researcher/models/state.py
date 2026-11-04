@@ -115,11 +115,6 @@ class ResearchState(TypedDict):
     final_report: str
     sources_json: str
 
-    # --- Subtopics (Optional Spin-offs) ---
-    enable_subtopics: bool
-    subtopics: list[str]
-    subtopic_reports: Annotated[list[str], operator.add]
-
 
 class WorkerState(TypedDict):
     """State passed into individual domain worker executions."""

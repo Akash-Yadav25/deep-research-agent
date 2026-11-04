@@ -3,7 +3,6 @@
 from deep_researcher.config.settings import (
     ARXIV_DELAY_SECONDS,
     ARXIV_MAX_RESULTS,
-    ENABLE_SUBTOPICS,
     HEADLESS_MODE,
     LLM_PROVIDER,
     MAX_RESEARCH_ITERATIONS,
@@ -20,7 +19,6 @@ from deep_researcher.config.settings import (
 __all__ = [
     "ARXIV_DELAY_SECONDS",
     "ARXIV_MAX_RESULTS",
-    "ENABLE_SUBTOPICS",
     "HEADLESS_MODE",
     "LLM_PROVIDER",
     "MAX_RESEARCH_ITERATIONS",

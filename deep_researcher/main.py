@@ -12,7 +12,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from deep_researcher.config.settings import (
-    ENABLE_SUBTOPICS,
     HEADLESS_MODE,
     LLM_PROVIDER,
     MAX_RESEARCH_ITERATIONS,
@@ -25,7 +24,7 @@ from deep_researcher.utils.output import print_step_header, save_research_artifa
 console = Console()
 
 
-def print_system_banner(topic: str, max_iterations: int, enable_subtopics: bool) -> None:
+def print_system_banner(topic: str, max_iterations: int) -> None:
     """Print the startup banner and operational parameters."""
     grid = Table.grid(padding=1)
     grid.add_column(style="bold cyan")
@@ -35,7 +34,6 @@ def print_system_banner(topic: str, max_iterations: int, enable_subtopics: bool)
     grid.add_row("Supervisor Model:", f"{SUPERVISOR_CONFIG.model} (structured output & reasoning)")
     grid.add_row("Worker Model:", f"{WORKER_CONFIG.model} (tool calling)")
     grid.add_row("Max Iterations:", str(max_iterations))
-    grid.add_row("Subtopic Deep Dives:", "Enabled" if enable_subtopics else "Disabled")
     grid.add_row("Topic:", f"[bold white]{topic}[/bold white]")
 
     console.print(
@@ -51,11 +49,10 @@ def print_system_banner(topic: str, max_iterations: int, enable_subtopics: bool)
 def run_research(
     topic: str,
     max_iterations: int = MAX_RESEARCH_ITERATIONS,
-    enable_subtopics: bool = ENABLE_SUBTOPICS,
     output_dir: str = "output",
 ) -> int:
     """Execute end-to-end research workflow."""
-    print_system_banner(topic, max_iterations, enable_subtopics)
+    print_system_banner(topic, max_iterations)
 
     graph = build_main_graph()
     thread_id = str(uuid4())
@@ -74,9 +71,6 @@ def run_research(
         "current_phase": "clarify",
         "final_report": "",
         "sources_json": "",
-        "enable_subtopics": enable_subtopics,
-        "subtopics": [],
-        "subtopic_reports": [],
     }
 
     console.print("\n[bold green]🚀 Initiating agent pipeline execution...[/bold green]\n")
@@ -86,38 +80,38 @@ def run_research(
         # Stream updates from the graph
         for event in graph.stream(initial_state, config=config, stream_mode="updates"):
             for node_name, state_update in event.items():
-                if not isinstance(state_update, dict):
-                    continue
-
-                phase = state_update.get("current_phase")
+                phase = state_update.get("current_phase", "")
                 if phase and phase != current_phase_seen:
                     current_phase_seen = phase
                     print_step_header(
-                        f"Phase: {phase.upper()}",
-                        f"Active agent node: {node_name}",
+                        title=f"Phase Transition: {phase.upper()}",
+                        subtitle=f"Executed by: [{node_name}]",
                     )
 
-                # Special logging for key milestones
+                # Specialized terminal logs per node
                 if node_name == "clarify_with_user":
-                    refined = state_update.get("topic")
-                    if refined:
-                        console.print(f"  [cyan]Clarified Scope:[/cyan] {refined}")
+                    refined = state_update.get("topic", topic)
+                    console.print(f"  [cyan]Refined Topic:[/cyan] {refined}")
 
                 elif node_name == "write_research_brief":
                     brief = state_update.get("research_brief")
                     if brief:
-                        console.print(
-                            f"  [cyan]Research Brief Created:[/cyan] {len(brief.research_questions)} questions, Language: '{brief.detected_language}'"
-                        )
+                        console.print(f"  [cyan]Research Brief Formulated:[/cyan] {len(brief.research_questions)} questions")
                         for q in brief.research_questions:
-                            console.print(f"    • [dim]{q.question}[/dim]")
+                            console.print(f"    • [P{q.priority}] {q.question}")
 
                 elif node_name == "write_draft_report":
                     draft = state_update.get("draft_report")
                     if draft:
-                        console.print(
-                            f"  [cyan]Draft Skeleton Created:[/cyan] '{draft.title}' ({len(draft.sections)} sections)"
-                        )
+                        console.print(f"  [cyan]Draft Skeleton Created:[/cyan] {len(draft.sections)} sections planned")
+
+                elif node_name == "supervisor_node":
+                    # Check messages from supervisor
+                    msgs = state_update.get("messages", [])
+                    if msgs:
+                        last_msg = msgs[-1].content
+                        first_line = last_msg.split("\n")[0] if "\n" in last_msg else last_msg
+                        console.print(f"  [yellow]Supervisor Directive:[/yellow] {first_line}")
 
                 elif node_name in ("web_researcher", "paper_researcher"):
                     notes = state_update.get("research_notes", [])
@@ -126,11 +120,6 @@ def run_research(
                     console.print(
                         f"  [magenta]Evidence Saved (Iteration {iter_count}):[/magenta] +{len(notes)} notes, +{len(sources)} sources"
                     )
-
-                elif node_name == "subtopic_evaluation":
-                    subtopics = state_update.get("subtopics", [])
-                    if subtopics:
-                        console.print(f"  [yellow]Identified Spin-off Subtopics:[/yellow] {', '.join(subtopics)}")
 
     except KeyboardInterrupt:
         console.print("\n[bold red]Interrupted by user.[/bold red]")
@@ -179,12 +168,12 @@ def run_research(
 def main() -> None:
     """CLI argument parsing and execution."""
     parser = argparse.ArgumentParser(
-        prog="deep-researcher",
-        description="Deep Researcher: Autonomous hierarchical multi-agent research system.",
+        description="Deep Researcher: Autonomous hierarchical multi-agent research system."
     )
     parser.add_argument(
         "topic",
         nargs="?",
+        type=str,
         help="Research topic or question to investigate.",
     )
     parser.add_argument(
@@ -193,12 +182,6 @@ def main() -> None:
         type=int,
         default=MAX_RESEARCH_ITERATIONS,
         help=f"Maximum research loop iterations (default: {MAX_RESEARCH_ITERATIONS})",
-    )
-    parser.add_argument(
-        "--subtopics",
-        action="store_true",
-        default=ENABLE_SUBTOPICS,
-        help="Enable follow-up spin-off subtopic generation",
     )
     parser.add_argument(
         "--output-dir",
@@ -216,8 +199,7 @@ def main() -> None:
                 "[bold red]Missing research topic.[/bold red]\n\n"
                 "Usage:\n"
                 "  [cyan]deep-researcher \"Quantum computing error mitigation techniques\"[/cyan]\n"
-                "  [cyan]deep-researcher \"Solid state battery commercialization\" --max-iterations 4[/cyan]\n"
-                "  [cyan]deep-researcher \"Multi-agent systems consensus protocols\" --subtopics[/cyan]",
+                "  [cyan]deep-researcher \"Solid state battery commercialization\" --max-iterations 4[/cyan]\n",
                 title="Deep Researcher",
                 border_style="red",
             )
@@ -227,7 +209,6 @@ def main() -> None:
     exit_code = run_research(
         topic=args.topic,
         max_iterations=args.max_iterations,
-        enable_subtopics=args.subtopics,
         output_dir=args.output_dir,
     )
     sys.exit(exit_code)

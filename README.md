@@ -74,9 +74,6 @@ The system uses a unified `BaseLLMProvider` strategy interface with automatic pr
 5. final_report_generation   (Synthesizes report, remaps local citations to [1],[2], generates references)
    │
    ▼
-6. subtopics (optional)      (Evaluates spin-off areas & fans out parallel mini-briefs via Send)
-   │
-   ▼
 [Publish Deliverables: report.md + sources.json]
 ```
 
@@ -168,8 +165,8 @@ TAVILY_API_KEY=tvly-xxxxxxxxxxxxxxxx
 # Basic run (uses models defined in .env)
 deep-researcher "Recent breakthroughs in solid-state EV batteries"
 
-# Custom iterations and follow-up subtopics enabled
-deep-researcher "Transformer architectural advances in low-resource reasoning" --max-iterations 4 --subtopics
+# Custom iterations
+deep-researcher "Transformer architectural advances in low-resource reasoning" --max-iterations 4
 
 # Output directory override
 deep-researcher "Quantum error mitigation techniques" -o ./my_reports

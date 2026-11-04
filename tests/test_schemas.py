@@ -10,7 +10,6 @@ from deep_researcher.models.schemas import (
     EvaluationResult,
     ResearchBrief,
     ResearchQuestion,
-    SubtopicEvaluation,
     SupervisorDecision,
 )
 from deep_researcher.models.state import ResearchNote, Source, merge_sources

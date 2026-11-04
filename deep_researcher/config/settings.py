@@ -89,7 +89,6 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 
 # --- Core Execution Settings ---
 MAX_RESEARCH_ITERATIONS = int(os.getenv("MAX_RESEARCH_ITERATIONS", "5"))
-ENABLE_SUBTOPICS = os.getenv("ENABLE_SUBTOPICS", "false").lower() in ("true", "1", "yes")
 HEADLESS_MODE = os.getenv("HEADLESS_MODE", "true").lower() in ("true", "1", "yes")
 
 # --- Tavily Search Settings ---

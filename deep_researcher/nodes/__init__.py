@@ -6,11 +6,6 @@ from deep_researcher.nodes.draft import write_draft_report
 from deep_researcher.nodes.evaluate import evaluate_progress
 from deep_researcher.nodes.final_report import final_report_node
 from deep_researcher.nodes.researchers import paper_researcher, web_researcher
-from deep_researcher.nodes.subtopics import (
-    route_subtopics,
-    subtopic_evaluation,
-    subtopic_research_worker,
-)
 from deep_researcher.nodes.supervisor import supervisor_node
 
 __all__ = [
@@ -18,9 +13,6 @@ __all__ = [
     "evaluate_progress",
     "final_report_node",
     "paper_researcher",
-    "route_subtopics",
-    "subtopic_evaluation",
-    "subtopic_research_worker",
     "supervisor_node",
     "web_researcher",
     "write_draft_report",
