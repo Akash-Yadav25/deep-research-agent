@@ -236,3 +236,86 @@ def test_model_factory_dispatch():
     assert llm is not None
     assert llm.model == "qwen3.5:9b"
     assert llm.temperature == 0.0
+
+
+def test_all_providers_support_writer_config():
+    """Verify that WRITER_CONFIG (8192 tokens) builds cleanly across all four providers."""
+    from deep_researcher.config.settings import WRITER_CONFIG
+
+    # 1. Ollama
+    ollama_provider = get_provider("ollama")
+    ollama_model = ollama_provider.build_model(WRITER_CONFIG)
+    assert ollama_model is not None
+    assert getattr(ollama_model, "num_predict", None) >= 8192
+
+    # 2. OpenAI
+    mock_openai_cls = MagicMock()
+    with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-mock-key"}):
+        with patch.dict(sys.modules, {"langchain_openai": MagicMock(ChatOpenAI=mock_openai_cls)}):
+            openai_cfg = RoleModelConfig(
+                provider="openai",
+                model="gpt-4o",
+                temperature=0.4,
+                max_tokens=8192,
+            )
+            openai_provider = get_provider("openai")
+            openai_provider.build_model(openai_cfg)
+            mock_openai_cls.assert_called_once_with(
+                model="gpt-4o",
+                temperature=0.4,
+                api_key="sk-mock-key",
+                max_tokens=8192,
+            )
+
+    # 3. Azure OpenAI
+    mock_azure_cls = MagicMock()
+    azure_env = {
+        "AZURE_OPENAI_API_KEY": "mock-azure-key",
+        "AZURE_OPENAI_ENDPOINT": "https://test.openai.azure.com/",
+        "AZURE_OPENAI_DEPLOYMENT_NAME": "gpt-4o-deployment",
+    }
+    with patch.dict(os.environ, azure_env):
+        with patch.dict(sys.modules, {"langchain_openai": MagicMock(AzureChatOpenAI=mock_azure_cls)}):
+            azure_cfg = RoleModelConfig(
+                provider="azure_openai",
+                model="gpt-4o",
+                temperature=0.4,
+                max_tokens=8192,
+            )
+            azure_provider = get_provider("azure_openai")
+            azure_provider.build_model(azure_cfg)
+            mock_azure_cls.assert_called_once_with(
+                azure_deployment="gpt-4o-deployment",
+                azure_endpoint="https://test.openai.azure.com/",
+                api_version="2024-08-01-preview",
+                api_key="mock-azure-key",
+                temperature=0.4,
+                max_tokens=8192,
+            )
+
+    # 4. Bedrock
+    mock_bedrock_cls = MagicMock()
+    bedrock_env = {
+        "AWS_REGION": "us-east-1",
+        "AWS_ACCESS_KEY_ID": "mock-access",
+        "AWS_SECRET_ACCESS_KEY": "mock-secret",
+    }
+    with patch.dict(os.environ, bedrock_env):
+        with patch.dict(sys.modules, {"langchain_aws": MagicMock(ChatBedrockConverse=mock_bedrock_cls)}):
+            bedrock_cfg = RoleModelConfig(
+                provider="bedrock",
+                model="anthropic.claude-3-5-sonnet-20241022-v2:0",
+                temperature=0.4,
+                max_tokens=8192,
+            )
+            bedrock_provider = get_provider("bedrock")
+            bedrock_provider.build_model(bedrock_cfg)
+            mock_bedrock_cls.assert_called_once_with(
+                model="anthropic.claude-3-5-sonnet-20241022-v2:0",
+                region_name="us-east-1",
+                temperature=0.4,
+                max_tokens=8192,
+                aws_access_key_id="mock-access",
+                aws_secret_access_key="mock-secret",
+            )
+

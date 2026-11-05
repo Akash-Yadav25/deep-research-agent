@@ -106,7 +106,7 @@ def test_final_report_node_synthesis_and_citation():
         "sources_json": "",
     }
 
-    with patch("deep_researcher.nodes.final_report.get_supervisor_llm", return_value=mock_llm):
+    with patch("deep_researcher.nodes.final_report.get_writer_llm", return_value=mock_llm):
         result = final_report_node(state)
         assert "[1]" in result["final_report"]
         assert "[2]" in result["final_report"]

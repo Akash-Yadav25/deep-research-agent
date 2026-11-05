@@ -9,6 +9,7 @@ from deep_researcher.utils.fallbacks import (
     get_supervisor_llm,
     get_worker_llm,
     get_worker_llm_with_fallbacks,
+    get_writer_llm,
     web_circuit_breaker,
 )
 from deep_researcher.utils.output import print_step_header, save_research_artifacts
@@ -24,6 +25,7 @@ __all__ = [
     "get_supervisor_llm",
     "get_worker_llm",
     "get_worker_llm_with_fallbacks",
+    "get_writer_llm",
     "invoke_structured",
     "print_step_header",
     "save_research_artifacts",

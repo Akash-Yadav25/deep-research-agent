@@ -74,6 +74,16 @@ WORKER_CONFIG = RoleModelConfig(
     max_tokens=int(os.getenv("WORKER_MAX_TOKENS", os.getenv("WORKER_NUM_PREDICT", "2048"))),
 )
 
+_writer_model = os.getenv("WRITER_MODEL", _sup_model)
+WRITER_CONFIG = RoleModelConfig(
+    provider=os.getenv("WRITER_PROVIDER", os.getenv("SUPERVISOR_PROVIDER", LLM_PROVIDER)).lower(),
+    model=_writer_model,
+    temperature=float(os.getenv("WRITER_TEMPERATURE", "0.4")),     # Balanced for clear, authoritative exposition
+    num_ctx=int(os.getenv("WRITER_NUM_CTX", os.getenv("SUPERVISOR_NUM_CTX", "32768"))),
+    max_tokens=int(os.getenv("WRITER_MAX_TOKENS", os.getenv("FINAL_REPORT_MAX_TOKENS", "8192"))),
+    reasoning=resolve_reasoning_default(_writer_model, os.getenv("WRITER_REASONING", "false")),
+)
+
 # --- Provider Credentials & Settings ---
 
 # OpenAI
