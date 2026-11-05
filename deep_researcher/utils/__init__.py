@@ -9,9 +9,11 @@ from deep_researcher.utils.fallbacks import (
     get_supervisor_llm,
     get_worker_llm,
     get_worker_llm_with_fallbacks,
+    get_writer_llm,
     web_circuit_breaker,
 )
 from deep_researcher.utils.output import print_step_header, save_research_artifacts
+from deep_researcher.utils.structured import extract_and_validate_json, invoke_structured
 
 __all__ = [
     "CitationManager",
@@ -19,9 +21,12 @@ __all__ = [
     "CircuitBreakerOpenError",
     "arxiv_circuit_breaker",
     "build_chat_model",
+    "extract_and_validate_json",
     "get_supervisor_llm",
     "get_worker_llm",
     "get_worker_llm_with_fallbacks",
+    "get_writer_llm",
+    "invoke_structured",
     "print_step_header",
     "save_research_artifacts",
     "web_circuit_breaker",

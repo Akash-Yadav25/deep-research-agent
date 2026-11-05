@@ -11,6 +11,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from deep_researcher.config.settings import (
     SUPERVISOR_CONFIG,
     WORKER_CONFIG,
+    WRITER_CONFIG,
     RoleModelConfig,
 )
 from deep_researcher.providers.factory import ModelFactory
@@ -107,6 +108,11 @@ def get_supervisor_llm() -> BaseChatModel:
 def get_worker_llm() -> BaseChatModel:
     """Retrieve worker LLM instance for tool-calling execution."""
     return build_chat_model(WORKER_CONFIG)
+
+
+def get_writer_llm() -> BaseChatModel:
+    """Retrieve writer LLM instance with expanded token capacity for final report synthesis."""
+    return build_chat_model(WRITER_CONFIG)
 
 
 def get_worker_llm_with_fallbacks() -> BaseChatModel:

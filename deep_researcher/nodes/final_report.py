@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from deep_researcher.models.state import ResearchState
 from deep_researcher.utils.citations import CitationManager
-from deep_researcher.utils.fallbacks import get_supervisor_llm
+from deep_researcher.utils.fallbacks import get_supervisor_llm, get_writer_llm
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def final_report_node(state: ResearchState) -> dict:
         "Please write the exhaustive research report now."
     )
 
-    llm = get_supervisor_llm()
+    llm = get_writer_llm()
     system_prompt = FINAL_REPORT_SYSTEM_PROMPT.format(language=language)
 
     try:

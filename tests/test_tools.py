@@ -75,4 +75,15 @@ def test_build_chat_model_config():
     llm = build_chat_model(cfg)
     assert llm.model == "deepseek-r1:14b"
     assert llm.temperature == 0.6
-    assert llm.num_ctx == 32768
+
+
+def test_writer_config_and_llm():
+    """Verify WRITER_CONFIG defaults and get_writer_llm initialization."""
+    from deep_researcher.config.settings import WRITER_CONFIG
+    from deep_researcher.utils.fallbacks import get_writer_llm
+
+    assert WRITER_CONFIG.max_tokens >= 8192
+    assert WRITER_CONFIG.num_ctx >= 32768
+    writer_llm = get_writer_llm()
+    assert writer_llm is not None
+    assert writer_llm.num_ctx >= 32768

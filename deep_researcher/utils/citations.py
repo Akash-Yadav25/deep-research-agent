@@ -57,6 +57,9 @@ class CitationManager:
         - Composite citations: [web-1, arxiv-2] -> [1, 2]
         - Adjacent citations: [web-1][arxiv-2] -> [1][2]
         """
+        # Auto-repair unclosed trailing citation tags (e.g. "[web-18" at end of line/string)
+        text = re.sub(r"\[([a-zA-Z0-9_\-]+)(?=\s*\n|$)", r"[\1]", text)
+
         # Step 1: Discover all local tokens in order of appearance
         # Pattern matches bracketed strings that contain local prefixes like web-1 or arxiv-2
         pattern = r"\[([a-zA-Z0-9_\-\s,;]+)\]"

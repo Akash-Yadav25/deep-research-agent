@@ -7,6 +7,7 @@ from deep_researcher.config.settings import HEADLESS_MODE
 from deep_researcher.models.schemas import ClarificationResult
 from deep_researcher.models.state import ResearchState
 from deep_researcher.utils.fallbacks import get_supervisor_llm
+from deep_researcher.utils.structured import invoke_structured
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,6 @@ You must respond with valid structured output."""
 def clarify_with_user(state: ResearchState) -> dict:
     """Analyze the prompt, determine if clarification is required, and formulate assumptions."""
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(ClarificationResult)
 
     topic = state.get("topic", "").strip()
     logger.info(f"[clarify_with_user] Analyzing topic: '{topic}' (headless={HEADLESS_MODE})")
@@ -35,10 +35,14 @@ def clarify_with_user(state: ResearchState) -> dict:
     )
 
     try:
-        result: ClarificationResult = structured_llm.invoke([
-            SystemMessage(content=CLARIFY_SYSTEM_PROMPT),
-            HumanMessage(content=user_prompt),
-        ])
+        result: ClarificationResult = invoke_structured(
+            llm=llm,
+            schema=ClarificationResult,
+            messages=[
+                SystemMessage(content=CLARIFY_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ],
+        )
         refined = result.refined_topic.strip() if result.refined_topic else topic
         assumptions = result.assumptions
     except Exception as exc:

@@ -12,6 +12,7 @@ from deep_researcher.config.settings import (
     TAVILY_SEARCH_DEPTH_DEEP,
     TAVILY_SEARCH_DEPTH_EXPLORATORY,
     WORKER_CONFIG,
+    WRITER_CONFIG,
     ModelConfig,
     RoleModelConfig,
 )
@@ -28,6 +29,7 @@ __all__ = [
     "TAVILY_SEARCH_DEPTH_DEEP",
     "TAVILY_SEARCH_DEPTH_EXPLORATORY",
     "WORKER_CONFIG",
+    "WRITER_CONFIG",
     "ModelConfig",
     "RoleModelConfig",
 ]

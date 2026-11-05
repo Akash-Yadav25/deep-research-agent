@@ -10,6 +10,7 @@ from langgraph.types import Command
 from deep_researcher.models.schemas import EvaluationResult
 from deep_researcher.models.state import ResearchState
 from deep_researcher.utils.fallbacks import get_supervisor_llm
+from deep_researcher.utils.structured import invoke_structured
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,6 @@ def evaluate_progress(
         return Command(goto="supervisor_node")
 
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(EvaluationResult)
 
     brief = state.get("research_brief")
     brief_text = brief.model_dump_json(indent=2) if brief else state.get("topic", "")
@@ -68,10 +68,14 @@ def evaluate_progress(
     )
 
     try:
-        eval_result: EvaluationResult = structured_llm.invoke([
-            SystemMessage(content=EVAL_SYSTEM_PROMPT),
-            HumanMessage(content=prompt),
-        ])
+        eval_result: EvaluationResult = invoke_structured(
+            llm=llm,
+            schema=EvaluationResult,
+            messages=[
+                SystemMessage(content=EVAL_SYSTEM_PROMPT),
+                HumanMessage(content=prompt),
+            ],
+        )
     except Exception as exc:
         logger.warning(f"Evaluation structured output failed ({exc}), using heuristic.")
         # If we have at least 2 notes and sources, consider sufficient

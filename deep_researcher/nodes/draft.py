@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from deep_researcher.models.schemas import DraftReport, DraftSection
 from deep_researcher.models.state import ResearchState
 from deep_researcher.utils.fallbacks import get_supervisor_llm
+from deep_researcher.utils.structured import invoke_structured
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ You must respond with valid structured output conforming to the DraftReport sche
 def write_draft_report(state: ResearchState) -> dict:
     """Generate a skeleton draft report with section hypotheses and open investigation questions."""
     llm = get_supervisor_llm()
-    structured_llm = llm.with_structured_output(DraftReport)
 
     brief = state.get("research_brief")
     if brief:
@@ -34,10 +34,14 @@ def write_draft_report(state: ResearchState) -> dict:
     logger.info("[write_draft_report] Synthesizing skeleton draft report...")
 
     try:
-        draft: DraftReport = structured_llm.invoke([
-            SystemMessage(content=DRAFT_SYSTEM_PROMPT),
-            HumanMessage(content=f"Research Brief:\n{brief_json}"),
-        ])
+        draft: DraftReport = invoke_structured(
+            llm=llm,
+            schema=DraftReport,
+            messages=[
+                SystemMessage(content=DRAFT_SYSTEM_PROMPT),
+                HumanMessage(content=f"Research Brief:\n{brief_json}"),
+            ],
+        )
     except Exception as exc:
         logger.warning(f"Structured output failed for draft report ({exc}), generating fallback draft.")
         sections = []

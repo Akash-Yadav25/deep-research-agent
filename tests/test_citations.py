@@ -46,6 +46,17 @@ def test_citation_composite_brackets():
     assert remapped == "Combined empirical and theoretical evidence [1, 2]."
 
 
+def test_citation_remapping_unclosed_trailing_tag():
+    """Verify auto-repair when text terminates with an unclosed citation marker (e.g. [web-18)."""
+    s1 = Source(local_id="web-18", title="CoMIC Framework", url="https://arxiv.org/html/2606.00756v1")
+    mgr = CitationManager(sources=[s1])
+
+    # Truncated string missing the closing bracket
+    text = "Aggregates cross-agent guidance keyed by semantic subgoal identifiers [web-18"
+    remapped = mgr.remap_citations(text)
+    assert remapped == "Aggregates cross-agent guidance keyed by semantic subgoal identifiers [1]"
+
+
 def test_bibliography_and_json_export():
     """Verify formatted Reference List and JSON export."""
     s1 = Source(

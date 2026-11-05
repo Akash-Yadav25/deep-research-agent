@@ -40,16 +40,30 @@ ModelConfig = RoleModelConfig
 
 # --- Provider & Model Configurations ---
 
+def resolve_reasoning_default(model: str, env_val: str | None = None) -> bool:
+    """Resolve reasoning mode: obey explicit env var, else enable only for reasoning architectures.
+
+    - If env_val is non-empty: parses 'true'/'1'/'yes' vs 'false'/'0'/'no'.
+    - If env_val is None or empty: returns True only for models containing 'deepseek-r1',
+      'o1', or 'o3' in their names; False for general models (e.g. 'qwen3.5', 'llama3', 'gpt-4o').
+    """
+    if env_val is not None and env_val.strip():
+        return env_val.strip().lower() in ("true", "1", "yes")
+    model_lower = model.lower()
+    return any(r in model_lower for r in ("deepseek-r1", "o1", "o3"))
+
+
 # Global provider default: "ollama" | "openai" | "azure_openai" | "bedrock"
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 
+_sup_model = os.getenv("SUPERVISOR_MODEL", "deepseek-r1:14b")
 SUPERVISOR_CONFIG = RoleModelConfig(
     provider=os.getenv("SUPERVISOR_PROVIDER", LLM_PROVIDER).lower(),
-    model=os.getenv("SUPERVISOR_MODEL", "deepseek-r1:14b"),
+    model=_sup_model,
     temperature=float(os.getenv("SUPERVISOR_TEMPERATURE", "0.6")),  # Optimal for reasoning/planning
     num_ctx=int(os.getenv("SUPERVISOR_NUM_CTX", "32768")),          # Expanded context for briefs/drafts
     max_tokens=int(os.getenv("SUPERVISOR_MAX_TOKENS", os.getenv("SUPERVISOR_NUM_PREDICT", "4096"))),
-    reasoning=os.getenv("SUPERVISOR_REASONING", "true").lower() in ("true", "1", "yes"),  # Strips <think> tokens
+    reasoning=resolve_reasoning_default(_sup_model, os.getenv("SUPERVISOR_REASONING")),
 )
 
 WORKER_CONFIG = RoleModelConfig(
@@ -58,6 +72,16 @@ WORKER_CONFIG = RoleModelConfig(
     temperature=float(os.getenv("WORKER_TEMPERATURE", "0.0")),     # Strict 0.0 for deterministic tool calls
     num_ctx=int(os.getenv("WORKER_NUM_CTX", "16384")),             # Fits search results + conversation
     max_tokens=int(os.getenv("WORKER_MAX_TOKENS", os.getenv("WORKER_NUM_PREDICT", "2048"))),
+)
+
+_writer_model = os.getenv("WRITER_MODEL", _sup_model)
+WRITER_CONFIG = RoleModelConfig(
+    provider=os.getenv("WRITER_PROVIDER", os.getenv("SUPERVISOR_PROVIDER", LLM_PROVIDER)).lower(),
+    model=_writer_model,
+    temperature=float(os.getenv("WRITER_TEMPERATURE", "0.4")),     # Balanced for clear, authoritative exposition
+    num_ctx=int(os.getenv("WRITER_NUM_CTX", os.getenv("SUPERVISOR_NUM_CTX", "32768"))),
+    max_tokens=int(os.getenv("WRITER_MAX_TOKENS", os.getenv("FINAL_REPORT_MAX_TOKENS", "8192"))),
+    reasoning=resolve_reasoning_default(_writer_model, os.getenv("WRITER_REASONING", "false")),
 )
 
 # --- Provider Credentials & Settings ---
