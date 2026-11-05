@@ -154,6 +154,36 @@ def test_invoke_structured_recovers_from_exception_raw_text():
     mock_llm.invoke.assert_not_called()
 
 
+def test_invoke_structured_recovers_via_json_mode():
+    """Verify recovery via method='json_mode' when native json_schema fails."""
+    mock_llm = MagicMock()
+    mock_native = MagicMock()
+    mock_json_mode = MagicMock()
+
+    # Native structured output fails with empty string
+    mock_native.invoke.side_effect = OutputParserException("Invalid json output: ", llm_output="")
+    # json_mode succeeds
+    expected = SampleSchema(action="web_research", reasoning="json_mode success", score=9)
+    mock_json_mode.invoke.return_value = expected
+
+    def fake_with_structured(schema, **kwargs):
+        if kwargs.get("method") == "json_mode":
+            return mock_json_mode
+        return mock_native
+
+    mock_llm.with_structured_output.side_effect = fake_with_structured
+
+    result = invoke_structured(
+        mock_llm,
+        SampleSchema,
+        [HumanMessage(content="Evaluate")],
+    )
+    assert result == expected
+    mock_json_mode.invoke.assert_called_once()
+    # Raw LLM was not needed because json_mode recovered
+    mock_llm.invoke.assert_not_called()
+
+
 def test_invoke_structured_recovers_via_raw_reinvocation():
     """Verify recovery via raw LLM re-invocation when exception has no raw text (token exhaustion)."""
     mock_llm = MagicMock()

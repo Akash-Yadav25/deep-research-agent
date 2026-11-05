@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ClarificationResult(BaseModel):
@@ -126,7 +126,12 @@ class EvaluationResult(BaseModel):
     sufficient: bool = Field(
         description="True if evidence is sufficient to assemble the final report.",
     )
-    next_priority: str | None = Field(
-        default=None,
-        description="Highest priority gap to investigate if evidence is insufficient.",
+    next_priority: str = Field(
+        default="",
+        description="Highest priority gap to investigate if evidence is insufficient, or empty string if sufficient.",
     )
+
+    @field_validator("next_priority", mode="before")
+    @classmethod
+    def _coerce_none_to_empty(cls, v: str | None) -> str:
+        return v if v is not None else ""
