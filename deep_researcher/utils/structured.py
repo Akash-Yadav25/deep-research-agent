@@ -82,7 +82,24 @@ def invoke_structured(
                     f"[invoke_structured] Recovery from exception raw text failed: {recover_exc}"
                 )
 
-        # Stage 2: Fall back to raw base model invocation with schema formatting prompt
+        # Stage 2: Attempt json_mode fallback (bypasses brittle json_schema GBNF compiler in local runners)
+        try:
+            json_mode_llm = llm.with_structured_output(schema, method="json_mode")
+            recovered = json_mode_llm.invoke(messages)
+            logger.info(
+                "[invoke_structured] Successfully recovered structured output via json_mode fallback."
+            )
+            return recovered
+        except Exception as json_mode_exc:
+            logger.debug(f"[invoke_structured] json_mode fallback failed: {json_mode_exc}")
+            raw_json_mode = getattr(json_mode_exc, "llm_output", None)
+            if isinstance(raw_json_mode, str) and raw_json_mode.strip():
+                try:
+                    return extract_and_validate_json(raw_json_mode, schema)
+                except Exception:
+                    pass
+
+        # Stage 3: Fall back to raw base model invocation with schema formatting prompt
         try:
             schema_json = json.dumps(schema.model_json_schema(), indent=2)
             recovery_prompt = (

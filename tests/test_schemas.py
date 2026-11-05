@@ -97,6 +97,21 @@ def test_evaluation_result_schema():
     )
     assert ev.coverage_score == 8
     assert ev.sufficient
+    assert ev.next_priority == ""
+
+    # None should coerce cleanly to empty string
+    ev_none = EvaluationResult(
+        coverage_score=7,
+        gaps=[],
+        sufficient=True,
+        next_priority=None,
+    )
+    assert ev_none.next_priority == ""
+
+    # JSON Schema should produce pure string without brittle anyOf unions
+    schema = EvaluationResult.model_json_schema()
+    assert schema["properties"]["next_priority"]["type"] == "string"
+    assert "anyOf" not in schema["properties"]["next_priority"]
 
     # Score outside 1-10 should fail
     with pytest.raises(ValidationError):
